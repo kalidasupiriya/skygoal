@@ -27,14 +27,20 @@ const Profile = () => {
         }
       } catch (err) {
         if (err.response?.status === 401) {
-          window.location.href = "/login";
+          // Only redirect if not already authenticated
+          setError("Unauthorized. Please login.");
         } else {
           setError("Network error: " + err.message);
         }
       }
     };
 
-    fetchProfile();
+    // Only fetch profile if token cookie exists
+    if (document.cookie.includes('token')) {
+      fetchProfile();
+    } else {
+      setError("Unauthorized. Please login.");
+    }
   }, []);
 
   const handleUpdatePassword = async (e) => {
