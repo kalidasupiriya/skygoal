@@ -105,8 +105,8 @@ const loginUser = async (req, res) => {
     return res
       .cookie('token', token, {
         httpOnly: true,
-        secure: true,
-        sameSite: 'none',
+        secure: process.env.COOKIE_SECURE === 'true',
+        sameSite: process.env.COOKIE_SAMESITE || 'lax',
       })
       .status(200)
       .json({
