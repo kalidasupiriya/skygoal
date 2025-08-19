@@ -150,4 +150,39 @@ const logoutUser = (req, res) => {
 	});
 	res.json({ success: true, message: 'Logged out successfully' });
 }
-module.exports = { registerUser, loginUser, getProfile, logoutUser  }
+// Update password for logged-in user
+const updatePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) return res.status(400).json({ success: false, message: 'Old password is incorrect' });
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error updating password', error });
+  }
+};
+
+// Reset password for users who hit retry limit
+const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    // Only allow if retry limit was hit
+    if (user.loginAttempts < 3) return res.status(400).json({ success: false, message: 'Retry limit not reached' });
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.loginAttempts = 0;
+    user.lastAttemptTime = null;
+    await user.save();
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error resetting password', error });
+  }
+};
+
+module.exports = { registerUser, loginUser, getProfile, logoutUser, updatePassword, resetPassword }

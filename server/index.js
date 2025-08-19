@@ -17,6 +17,7 @@ app.use(express.json());
 app.use(helmet());
 
 const userRoutes = require('./routes/userRoutes');
+require('./resetCron');
 const otpRoutes = require('./routes/otpRoutes');
 const apiLimiter = require('./middleware/rateLimiter');
 

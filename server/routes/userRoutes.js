@@ -8,5 +8,7 @@ router.post('/register', rateLimiter, userController.registerUser);
 router.post('/login', rateLimiter, userController.loginUser);
 router.get('/profile', authMiddleware, rateLimiter, userController.getProfile);
 router.post('/logout', userController.logoutUser);
+router.post('/update-password', authMiddleware, userController.updatePassword);
+router.post('/reset-password', userController.resetPassword);
 
 module.exports = router;

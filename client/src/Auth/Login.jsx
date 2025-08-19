@@ -20,9 +20,43 @@ const Login = () => {
     });
   };
 
+  const [showReset, setShowReset] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetMsg, setResetMsg] = useState("");
+
   const handleSubmit = (e) => {
     e.preventDefault();
     dispatch(loginUser(formData));
+  };
+
+  useEffect(() => {
+    if (error && error.message && error.message.toLowerCase().includes("account locked")) {
+      setShowReset(true);
+    } else {
+      setShowReset(false);
+    }
+  }, [error]);
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setResetMsg("");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, newPassword })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResetMsg("Password reset successfully. You can now login.");
+        setShowReset(false);
+        setNewPassword("");
+      } else {
+        setResetMsg(data.message || "Failed to reset password.");
+      }
+    } catch (err) {
+      setResetMsg("Network error: " + err.message);
+    }
   };
 
   useEffect(() => {
@@ -63,10 +97,22 @@ const Login = () => {
                 />
               </div>
 
+
               {error && (
                 <div className="alert alert-danger">
                   {error.message || "Login failed"}
                 </div>
+              )}
+
+              {showReset && (
+                <form onSubmit={handleResetPassword} className="mt-3">
+                  <div className="mb-2">
+                    <label>New Password</label>
+                    <input type="password" className="form-control" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6} />
+                  </div>
+                  <button type="submit" className="btn btn-warning">Reset Password</button>
+                  {resetMsg && <div className="mt-2 text-success">{resetMsg}</div>}
+                </form>
               )}
 
               <button
