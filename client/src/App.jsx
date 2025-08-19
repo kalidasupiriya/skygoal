@@ -26,6 +26,12 @@ const App = () => {
     <>
       <Navbar />
       <Routes>
+          <Route
+          path="/"
+          element={
+            !isAuthenticated ? <Login /> : <Navigate to="/profile" replace />
+          }
+        />
         <Route
           path="/login"
           element={
