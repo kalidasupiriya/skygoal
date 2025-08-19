@@ -35,12 +35,7 @@ const Profile = () => {
       }
     };
 
-    // Only fetch profile if token cookie exists
-    if (document.cookie.includes('token')) {
-      fetchProfile();
-    } else {
-      setError("Unauthorized. Please login.");
-    }
+  fetchProfile();
   }, []);
 
   const handleUpdatePassword = async (e) => {
