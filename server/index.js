@@ -13,7 +13,15 @@ const allowedOrigins = [
   'https://skygoal-henna.vercel.app'
 ];
 app.use(cors({
-  origin: allowedOrigins, // frontend URL
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));

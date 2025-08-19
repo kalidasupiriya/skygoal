@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+axios.defaults.withCredentials = true; // 👈 send cookies automatically
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,
+});
 
 const Profile = () => {
-  // All hooks at the top
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
   const [oldPassword, setOldPassword] = useState("");
@@ -12,74 +19,54 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/profile`, {
-          method: "GET",
-          credentials: "include", // include cookies for auth
-        });
-
-        if (res.status === 401) {
-          // not authenticated
-          window.location.href = "/login";
-          return;
-        }
-
-        if (!res.ok) {
-          // some other server error
-          setError(`Error ${res.status}: ${res.statusText}`);
-          return;
-        }
-
-        const data = await res.json();
-        if (data.success) {
-          setUser(data.user);
+        const res = await api.get("/users/profile");
+        if (res.data.success) {
+          setUser(res.data.user);
         } else {
-          setError(data.message || "Failed to load profile");
+          setError(res.data.message || "Failed to load profile");
         }
       } catch (err) {
-        setError("Network error: " + err.message);
+        if (err.response?.status === 401) {
+          window.location.href = "/login";
+        } else {
+          setError("Network error: " + err.message);
+        }
       }
     };
 
     fetchProfile();
   }, []);
 
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
-  if (!user) return <p>Loading profile...</p>;
-
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
     setPwMessage("");
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/update-password`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ oldPassword, newPassword })
+      const res = await api.post("/users/update-password", {
+        oldPassword,
+        newPassword,
       });
-      const data = await res.json();
-      if (data.success) {
+      if (res.data.success) {
         setPwMessage("Password updated successfully.");
         setOldPassword("");
         setNewPassword("");
       } else {
-        setPwMessage(data.message || "Failed to update password.");
+        setPwMessage(res.data.message || "Failed to update password.");
       }
     } catch (err) {
-      setPwMessage("Network error: " + err.message);
+      setPwMessage(err.response?.data?.message || "Network error: " + err.message);
     }
   };
+
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (!user) return <p>Loading profile...</p>;
 
   return (
     <div className="container mt-5">
       <h2>
         Welcome, {user.firstName} {user.lastName}
       </h2>
-      <p>
-        <strong>Email:</strong> {user.email}
-      </p>
-      <p>
-        <strong>Status:</strong> {user.status}
-      </p>
+      <p><strong>Email:</strong> {user.email}</p>
+      <p><strong>Status:</strong> {user.status}</p>
 
       <hr />
       <button className="btn btn-outline-primary mb-3" onClick={() => setShowUpdatePw(true)}>
