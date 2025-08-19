@@ -105,7 +105,7 @@ const loginUser = async (req, res) => {
     return res
       .cookie('token', token, {
         httpOnly: true,
-        secure: false,
+        secure: process.env.COOKIE_SECURE,
         sameSite: 'lax',
       })
       .status(200)
@@ -145,7 +145,7 @@ const getProfile = async (req, res) => {
 const logoutUser = (req, res) => {
 	res.clearCookie('token', {
 		httpOnly: true,
-		secure: false,
+		secure: process.env.COOKIE_SECURE,
 		sameSite: 'lax',
 	});
 	res.json({ success: true, message: 'Logged out successfully' });
